@@ -117,8 +117,8 @@ class Menu():
         self.menu = pgmenu.Menu(500, 500, 'Othello',
                                 theme=pgmenu.themes.THEME_GREEN)
 
-        self.menu.add_selector('Jugador Negras :', [['Persona', 1], ['Aleatorio', 2], ['Reglas', 3], ['ReglasAledo',4]], onchange=self.playerBlack)
-        self.menu.add_selector('Jugador Blancas :', [['Persona', 1], ['Aleatorio', 2],['Reglas', 3],['ReglasAledo',4]], onchange=self.playerWhite)
+        self.menu.add_selector('Jugador Negras :', [['Persona', 1], ['Aleatorio', 2], ['Reglas', 3], ['ReglasAledo',4], ['Minimax', 5]], onchange=self.playerBlack)
+        self.menu.add_selector('Jugador Blancas :', [['Persona', 1], ['Aleatorio', 2],['Reglas', 3],['ReglasAledo',4], ['Minimax', 5]], onchange=self.playerWhite)
         self.menu.add_button('Jugar', self.startGame)
         self.menu.add_button('Salir', pgmenu.events.EXIT)
         self.menu.mainloop(self.screen)

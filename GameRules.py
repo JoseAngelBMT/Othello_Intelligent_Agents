@@ -1,5 +1,6 @@
 import numpy as np
 import copy
+import random
 
 class Othello:
 
@@ -132,22 +133,68 @@ class Othello:
     # Dado un movimiento, devuelve la lista de movimientos legales del oponente
     def getOpponentMove(self,i,j,opponentColor):
         game = copy.deepcopy(self)
-        color = 1
-        if opponentColor == 1:
-            color = 2
-        else:
-            color = 1
-
+        color = self.getOpponentColor(opponentColor)
         game.doMove(color,i,j)
         return game.getMoves(opponentColor)
 
     # Devuelve todos los estados (tableros) para un movimiento
-    def getnextStates(self,color):
+    def getNextStates(self,color):
         moves = self.getMoves(color)
-        print(moves)
         boards = []
         for move in moves:
             game = copy.deepcopy(self)
             game.doMove(color, move[0], move[1])
             boards.append(game.getBoard())
+        random.shuffle(boards)
         return boards
+
+
+    def getOpponentColor(self,color):
+        if color == 1:
+            return 2
+        else:
+            return 1
+
+    def getHeuristic(self,color):
+        score = 0
+        weights = [[100, -20, 10,  7,  7, 10, -20, 100],
+                   [-20, -50, -4, -4, -4, -4, -50, -20],
+                   [10,   -4, -2, -2, -2, -2,  -4, 10],
+                   [7,    -4, -2,  1,  1, -2,  -4, 7],
+                   [7,    -4, -2,  1,  1, -2,  -4, 7],
+                   [10,   -4, -2, -2, -2, -2,  -4, 10],
+                   [-20, -50, -4, -4, -4, -4, -50, -20],
+                   [100, -20, 10,  7,  7, 10, -20, 100]]
+        for i in range(8):
+            for j in range(8):
+                if self.board[i][j] == color:
+                    score *= weights[i][j]
+        return score
+        """corner = 0
+        cornerOpponent = 0
+        if self.board[0][0] == color:
+            corner += 1
+        elif self.board[0][0] != 0 and self.board[0][0] != color:
+            cornerOpponent += 1
+
+        if self.board[0][7] == color:
+            corner += 1
+        elif self.board[0][7] != 0 and self.board[0][7] != color:
+            cornerOpponent += 1
+
+        if self.board[7][0] == color:
+            corner += 1
+        elif self.board[7][0] != 0 and self.board[7][0] != color:
+            cornerOpponent += 1
+
+        if self.board[7][7] == color:
+            corner += 1
+        elif self.board[7][7] != 0 and self.board[7][7] != color:
+            cornerOpponent += 1
+
+        mobility = len(self.getMoves(color))
+        mobilityOpponent = len(self.getMoves(self.getOpponentColor(color)))
+        if (mobility + mobilityOpponent) == 0:
+            return 10*(corner - cornerOpponent)
+        score = 10*(corner - cornerOpponent) + ((mobility - mobilityOpponent)/(mobility + mobilityOpponent))
+        return score"""

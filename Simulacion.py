@@ -35,9 +35,10 @@ def game(agentBla,agentWhi):
 
 len = 100
 agente1, agente2, empates = 0,0,0
+start_time = time.time()
 for i in range(len):
     if i <  len/2:
-        agentB = ag.RulesAledoAgent(2)
+        agentB = ag.MiniMaxAgent(2)
         agentW = ag.RulesAgent(1)
         value = game(agentB, agentW)
         if value == 0:
@@ -47,7 +48,7 @@ for i in range(len):
         else:
             empates += 1
     if i >= len/2:
-        agentW = ag.RulesAledoAgent(1)
+        agentW = ag.MiniMaxAgent(1)
         agentB = ag.RulesAgent(2)
         value = game(agentB, agentW)
         if value == 0:
@@ -57,7 +58,7 @@ for i in range(len):
         else:
             empates += 1
 
-
+print("Tiempo de ejecucion: ",(time.time() - start_time),"\n")
 
 print("TASA AGENTE1: ", (agente1/len)*100)
 print("TASA AGENTE2: ", (agente2/len)*100)

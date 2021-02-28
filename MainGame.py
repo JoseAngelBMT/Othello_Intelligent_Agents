@@ -26,6 +26,8 @@ class Game():
             self.agentBlack = ag.RulesAgent(2)
         elif self.playerBlack == 4:
             self.agentBlack = ag.RulesAledoAgent(2)
+        elif self.playerBlack == 5:
+            self.agentBlack = ag.MiniMaxAgent(2)
 
         if self.playerWhite == 2:
             self.agentWhite = ag.RandomAgent(1)
@@ -33,6 +35,8 @@ class Game():
             self.agentWhite = ag.RulesAledoAgent(1)
         elif self.playerWhite == 4:
             self.agentWhite = ag.RulesAledoAgent(1)
+        elif self.playerWhite == 5:
+            self.agentWhite = ag.MiniMaxAgent(1)
 
     # Devuelve la posicion segun el tipo de jugador
     def getPosition(self,turn):

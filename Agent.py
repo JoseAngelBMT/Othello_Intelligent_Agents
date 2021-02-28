@@ -1,7 +1,7 @@
 import GameRules as gm
 import numpy as np
 from random import randint
-
+import copy
 
 class RandomAgent():
 
@@ -85,7 +85,6 @@ class RulesAledoAgent():
         self.blockPerimeter(board, 0, 7)
         self.blockPerimeter(board, 7, 0)
         self.blockPerimeter(board, 7, 7)
-
         """Casilla del perimetro que tras ser ocupada quede adyacente a dos casillas del perimetro del adversario"""
         """Casilla del perimetro que tras ser ocupada no quede adyacente a ninguna casilla del perimetro del adversario, salvo las casillas
                 adyacentes a las esquinas. Notar que si queda adyacente a una unica casilla del perimetro del adversario, este puede revertir el color
@@ -107,25 +106,7 @@ class RulesAledoAgent():
                 des = j + 2
                 desless = j - 2
                 if des < 8:
-                    """if desless >= 0:
-                        if perimeter[i][desless] == 0 and perimeter[i][j-1] == 0 and perimeter[i][j] == opponentColor:
-                            if i == 0:
-                                self.weights[i][j-1] = 2
-                            elif i == 1:
-                                self.weights[7][j-1] = 2
-                            elif i == 2:
-                                self.weights[j-1][0] = 2
-                            else:
-                                self.weights[j-1][7] = 2
-                        if perimeter[i][j] == opponentColor and perimeter[i][j+1] == 0 and perimeter[i][des] == 0:
-                            if i == 0:
-                                self.weights[i][j+1] = 2
-                            elif i == 1:
-                                self.weights[7][j+1] = 2
-                            elif i == 2:
-                                self.weights[j+1][0] = 2
-                            else:
-                                self.weights[j+1][7] = 2"""
+                    # Si una posicion del perimetro es cogida por el oponente, las posiciones de al lado son peores.
                     if perimeter[i][j] == opponentColor and perimeter[i][j+1] == 0 and perimeter[i][des] == opponentColor:
                         if i == 0:
                             self.weights[i][j+1] = 8
@@ -159,33 +140,52 @@ class RulesAledoAgent():
         return False
 
 
-class MinMaxAgent():
+class MiniMaxAgent():
 
     def __init__(self,color):
         self.color = color
         self.heuristic = 0
 
     def getAction(self, game):
-        pass
+        alpha = float('inf')
+        beta = float('-inf')
+        (score, board) = self.alphabeta(game, 10, alpha, beta, True)
+        (x,y) = self.positionChange(board, game)
+        return (x,y)
 
-    """
-    def alphabeta(self,depth, alpha, beta):
+    def alphabeta(self,game, depth, alpha, beta, actualPlayer):
 
         if depth == 0:
-            return self.heuristic
+            return (game.getHeuristic(self.color),game.getBoard())
 
-        if player == MAX:
-            for son in subtree:
-                alpha = max(alpha, self.alphabeta(depth-1, alpha, beta))
+        opponent = game.getOpponentColor(self.color)
+        child = None
+        if actualPlayer:
+            for child in game.getNextStates(self.color):
+                childGame = copy.deepcopy(game)
+                childGame.setBoard(child)
+                (score, board) = self.alphabeta(childGame, depth - 1, alpha, beta, False)
+                alpha = max(alpha, score)
                 if beta <= alpha:
                     break
-            return alpha
+            return (alpha, child)
 
-        if player == MIN:
-            for son in subtree:
-                beta = min(beta, self.alphabeta(depth-1, alpha, beta))
+        else:
+            for child in game.getNextStates(opponent):
+                childGame = copy.deepcopy(game)
+                childGame.setBoard(child)
+                (score, board) = self.alphabeta(childGame, depth - 1, alpha, beta, True)
+                beta = min(beta, score)
                 if beta <= alpha:
                     break
-            return beta"""
+            return (beta, child)
+
+
+    def positionChange(self,board,game):
+        for i in range(8):
+            for j in range(8):
+                actualBoard = game.getBoard()
+                if actualBoard[i][j] == 0 and board[i][j] != actualBoard[i][j]:
+                    return (i,j)
 
 
