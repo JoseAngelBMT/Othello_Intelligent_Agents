@@ -137,16 +137,16 @@ class Othello:
         game.doMove(color,i,j)
         return game.getMoves(opponentColor)
 
-    # Devuelve todos los estados (tableros) para un movimiento
+    # Devuelve todos los estados para un movimiento
     def getNextStates(self,color):
         moves = self.getMoves(color)
-        boards = []
+        states = []
         for move in moves:
             game = copy.deepcopy(self)
             game.doMove(color, move[0], move[1])
-            boards.append(game.getBoard())
-        random.shuffle(boards)
-        return boards
+            states.append(game)
+        states = self.sortStates(color, states)
+        return states
 
 
     def getOpponentColor(self,color):
@@ -155,7 +155,8 @@ class Othello:
         else:
             return 1
 
-    def getHeuristic(self,color):
+    # Obtiene el valor heuristico
+    def getHeuristic(self,color,newGame):
         score = 0
         weights = [[100, -20, 10,  7,  7, 10, -20, 100],
                    [-20, -50, -4, -4, -4, -4, -50, -20],
@@ -165,36 +166,27 @@ class Othello:
                    [10,   -4, -2, -2, -2, -2,  -4, 10],
                    [-20, -50, -4, -4, -4, -4, -50, -20],
                    [100, -20, 10,  7,  7, 10, -20, 100]]
+
+        # Si el oponente no tiene ningun movimiento, el estado es muy bueno
+        if len(newGame.getMoves(self.getOpponentColor(color))) == 0:
+            return 100000000
+
+        newboard = newGame.getBoard()
         for i in range(8):
             for j in range(8):
-                if self.board[i][j] == color:
-                    score *= weights[i][j]
+                if newboard[i][j] == color:
+                    score += weights[i][j]
+                elif newboard[i][j] == self.getOpponentColor(color):
+                    score += -(weights[i][j])
+
         return score
-        """corner = 0
-        cornerOpponent = 0
-        if self.board[0][0] == color:
-            corner += 1
-        elif self.board[0][0] != 0 and self.board[0][0] != color:
-            cornerOpponent += 1
 
-        if self.board[0][7] == color:
-            corner += 1
-        elif self.board[0][7] != 0 and self.board[0][7] != color:
-            cornerOpponent += 1
+    #Ordena los diferentes estados pasados por parametr, segun una heuristica dada
+    def sortStates(self,color, states):
+        scoreList = {}
+        for i in states:
+            score = self.getHeuristic(color, i)
+            scoreList[i] = score
+        scoreList = dict(sorted(scoreList.items(),reverse=True, key=lambda item: item[1]))
+        return list(scoreList.keys())
 
-        if self.board[7][0] == color:
-            corner += 1
-        elif self.board[7][0] != 0 and self.board[7][0] != color:
-            cornerOpponent += 1
-
-        if self.board[7][7] == color:
-            corner += 1
-        elif self.board[7][7] != 0 and self.board[7][7] != color:
-            cornerOpponent += 1
-
-        mobility = len(self.getMoves(color))
-        mobilityOpponent = len(self.getMoves(self.getOpponentColor(color)))
-        if (mobility + mobilityOpponent) == 0:
-            return 10*(corner - cornerOpponent)
-        score = 10*(corner - cornerOpponent) + ((mobility - mobilityOpponent)/(mobility + mobilityOpponent))
-        return score"""

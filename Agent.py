@@ -90,7 +90,6 @@ class RulesAledoAgent():
                 adyacentes a las esquinas. Notar que si queda adyacente a una unica casilla del perimetro del adversario, este puede revertir el color
                 a su favor"""
         self.middlePerimeter(board)
-        self.printBoard()
 
 
     def middlePerimeter(self,board):
@@ -149,36 +148,34 @@ class MiniMaxAgent():
     def getAction(self, game):
         alpha = float('inf')
         beta = float('-inf')
-        (score, board) = self.alphabeta(game, 10, alpha, beta, True)
+        (score, board) = self.alphabeta(game, None, 3, alpha, beta, True)
         (x,y) = self.positionChange(board, game)
         return (x,y)
 
-    def alphabeta(self,game, depth, alpha, beta, actualPlayer):
+    def alphabeta(self,game,gameParent, depth, alpha, beta, actualPlayer):
 
         if depth == 0:
-            return (game.getHeuristic(self.color),game.getBoard())
+            return (game.getHeuristic(self.color, gameParent), game.getBoard())
 
         opponent = game.getOpponentColor(self.color)
-        child = None
+        board = None
         if actualPlayer:
             for child in game.getNextStates(self.color):
-                childGame = copy.deepcopy(game)
-                childGame.setBoard(child)
-                (score, board) = self.alphabeta(childGame, depth - 1, alpha, beta, False)
+                (score, board) = self.alphabeta(child,game, depth - 1, alpha, beta, False)
+                board = child.getBoard()
                 alpha = max(alpha, score)
                 if beta <= alpha:
                     break
-            return (alpha, child)
+            return (alpha, board)
 
         else:
             for child in game.getNextStates(opponent):
-                childGame = copy.deepcopy(game)
-                childGame.setBoard(child)
-                (score, board) = self.alphabeta(childGame, depth - 1, alpha, beta, True)
+                (score, board) = self.alphabeta(child,game, depth - 1, alpha, beta, True)
+                board = child.getBoard()
                 beta = min(beta, score)
                 if beta <= alpha:
                     break
-            return (beta, child)
+            return (beta, board)
 
 
     def positionChange(self,board,game):
