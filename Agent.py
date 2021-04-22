@@ -1,7 +1,7 @@
-import GameRules as gm
-import numpy as np
 from random import randint
 import copy
+import time
+import Node
 
 class RandomAgent():
 
@@ -29,7 +29,7 @@ class RulesAgent():
             if self.isCorner(move):
                 return move
 
-            numberMoves = len(game.getOpponentMove(move[0], move[1], self.opponentColor()))
+            numberMoves = len(game.getOpponentMove(move[0], move[1], game.getOpponentColor(self.color)))
             if numberMoves <= min:
                 betterMoves.append(move)
                 min = numberMoves
@@ -38,17 +38,12 @@ class RulesAgent():
         random_number = randint(0, len(betterMoves)) - 1
         return betterMoves[random_number]
 
-
+    # Comprueba si la posicion esta en una esquina del tablero
     def isCorner(self,move):
         if move == (0, 0) or move == (0, 7) or move == (7, 0) or move == (0, 7):
             return True
         return False
 
-    def opponentColor(self):
-        if self.color == 1:
-            return 2
-        elif self.color == 2:
-            return 1
 
 class RulesAledoAgent():
 
@@ -62,6 +57,7 @@ class RulesAledoAgent():
                         [7, 3,4,4,4,4,3, 7],
                         [0, 0,3,3,3,3,0, 0],
                         [10,0,7,7,7,7,0,10]]
+        self.moves = None
 
     def getAction(self,game):
         self.updateWeights(game.getBoard())
@@ -74,24 +70,19 @@ class RulesAledoAgent():
                 max = weight
                 betterMoves.append(move)
 
+        self.moves = betterMoves
         random_number = randint(0, len(betterMoves)) - 1
         return betterMoves[random_number]
 
-
+    # Actualiza la matriz de pesos
     def updateWeights(self,board):
-        """Casilla del perimetro de modo que entre una de las esquinas de ese lado y la casilla que ocupamos, todas las casillas (incluida la
-        esquina) sea de nuestro color.Estas casillas ya no las puede conseguir el adversario"""
         self.blockPerimeter(board, 0, 0)
         self.blockPerimeter(board, 0, 7)
         self.blockPerimeter(board, 7, 0)
         self.blockPerimeter(board, 7, 7)
-        """Casilla del perimetro que tras ser ocupada quede adyacente a dos casillas del perimetro del adversario"""
-        """Casilla del perimetro que tras ser ocupada no quede adyacente a ninguna casilla del perimetro del adversario, salvo las casillas
-                adyacentes a las esquinas. Notar que si queda adyacente a una unica casilla del perimetro del adversario, este puede revertir el color
-                a su favor"""
         self.middlePerimeter(board)
 
-
+    # Si una posicion se encuentra en el perimetro y no tiene al lado ninguna ficha de oponente, es una posicion buena
     def middlePerimeter(self,board):
         perimeter = [board[0][:],board[7][:],board[0:,0],board[0:,7]]
         opponentColor = 1
@@ -103,9 +94,8 @@ class RulesAledoAgent():
         for i in range(4):
             for j in range(8):
                 des = j + 2
-                desless = j - 2
                 if des < 8:
-                    # Si una posicion del perimetro es cogida por el oponente, las posiciones de al lado son peores.
+                    # Si una posicion del perimetro es cogida por el oponente, las posiciones de al lado son peores. Viendo los resultados, los empeora
                     if perimeter[i][j] == opponentColor and perimeter[i][j+1] == 0 and perimeter[i][des] == opponentColor:
                         if i == 0:
                             self.weights[i][j+1] = 8
@@ -116,6 +106,7 @@ class RulesAledoAgent():
                         else:
                             self.weights[j+1][7] = 8
 
+    # Si a partir de una esquina, en las direcciones del perimetro hay fichas de nuestro mismo color, la siguiente posicion vacia sera muy buena
     def blockPerimeter(self,board, i, j):
         directions = [(0,1), (1,0), (0, -1), (-1, 0)]
         if board[i][j] == self.color:
@@ -128,61 +119,210 @@ class RulesAledoAgent():
                 if self.inBoard(x,y) and board[x][y] == 0:
                     self.weights[x][y] = 9
 
-    def printBoard(self):
-        for row in self.weights:
-            print(row)
-        print("\n")
-
+    # Comprueba si la posicion esta dentro de la matriz
     def inBoard(self,i,j):
         if i >= 0 and i < 8 and j >= 0 and j < 8:
             return True
         return False
 
+    def getMoves(self):
+        return self.moves
 
-class MiniMaxAgent():
 
-    def __init__(self,color):
+class AlphaBetaAgent():
+
+    def __init__(self,color,evaluator):
         self.color = color
         self.heuristic = 0
+        self.evaluator = evaluator
+
+        self.nodes = 0
+
 
     def getAction(self, game):
+        board = self.bestMove(game, 4)
+        return board.getLastMove()
+
+    def bestMove(self, game, depth):
+        bestMove = None
         alpha = float('inf')
         beta = float('-inf')
-        (score, board) = self.alphabeta(game, None, 3, alpha, beta, True)
-        (x,y) = self.positionChange(board, game)
-        return (x,y)
+        score = float('-inf')
+        for child in game.getNextStates(self.color, self.evaluator.heuristicValue()):
+            self.nodes += 1
+            if bestMove == None:
+                bestMove = copy.copy(child)
+            newScore = self.alphabeta(child, depth - 1, alpha, beta, False)
+            if score < newScore:
+                score = newScore
+                bestMove = copy.copy(child)
+        return bestMove
 
-    def alphabeta(self,game,gameParent, depth, alpha, beta, actualPlayer):
+    def alphabeta(self, game, depth, alpha, beta, actualPlayer):
 
         if depth == 0:
-            return (game.getHeuristic(self.color, gameParent), game.getBoard())
+            function = self.evaluator.heuristicValue()
+            return function(self.color,game)
 
         opponent = game.getOpponentColor(self.color)
-        board = None
+
         if actualPlayer:
-            for child in game.getNextStates(self.color):
-                (score, board) = self.alphabeta(child,game, depth - 1, alpha, beta, False)
-                board = child.getBoard()
-                alpha = max(alpha, score)
+            newScore = float('-inf')
+            for child in game.getNextStates(self.color,self.evaluator.heuristicValue()):
+                self.nodes +=1
+                score = self.alphabeta(child, depth - 1,alpha, beta, False)
+                if score > newScore:
+                    newScore = score
+                    beta = newScore
                 if beta <= alpha:
                     break
-            return (alpha, board)
+            return beta
 
         else:
-            for child in game.getNextStates(opponent):
-                (score, board) = self.alphabeta(child,game, depth - 1, alpha, beta, True)
-                board = child.getBoard()
-                beta = min(beta, score)
+            newScore = float('inf')
+            for child in game.getNextStates(opponent,self.evaluator.heuristicValue()):
+                self.nodes += 1
+                score = self.alphabeta(child, depth - 1, alpha, beta, True)
+                if score < newScore:
+                    newScore = score
+                    alpha = newScore
                 if beta <= alpha:
                     break
-            return (beta, board)
+            return alpha
+
+    def getNodes(self):
+        return self.nodes
+
+class MinimaxAgent():
+
+    def __init__(self,color, evaluator):
+        self.color = color
+        self.heuristic = 0
+        self.evaluator = evaluator
+
+        self.nodes = 0
+
+    def getAction(self, game):
+        board = self.bestMove(game,2)
+        return board.getLastMove()
+
+    def bestMove(self,game,depth):
+        bestMove = None
+        score = float('-inf')
+        for child in game.getNextStates(self.color, self.evaluator.heuristicValue()):
+            self.nodes += 1
+            newScore = self.minimax(child,depth-1,False)
+            if score < newScore:
+                score = newScore
+                bestMove = copy.copy(child)
+        return bestMove
+
+    def minimax(self,game,depth,actualPlayer):
+
+        if depth == 0:
+            function = self.evaluator.heuristicValue()
+            return function(self.color,game)
+
+        opponent = game.getOpponentColor(self.color)
+
+        if actualPlayer:
+            newScore = float('-inf')
+            for child in game.getNextStates(self.color, self.evaluator.heuristicValue()):
+                self.nodes += 1
+                score = self.minimax(child, depth - 1, False)
+                if score > newScore:
+                    newScore = score
+            return newScore
+
+        else:
+            newScore = float('inf')
+            for child in game.getNextStates(opponent, self.evaluator.heuristicValue()):
+                self.nodes += 1
+                score = self.minimax(child, depth - 1, True)
+                if score < newScore:
+                    newScore = score
+            return newScore
+
+    def getNodes(self):
+        return self.nodes
+
+# Union de los dos agentes de reglas anteriores
+class UnionRulesAgent():
+
+    def __init__(self, color):
+        self.color = color
+        self.weights = [[10, 0, 7, 7, 7, 7, 0, 10],
+                        [0, 0, 3, 3, 3, 3, 0, 0],
+                        [7, 3, 4, 4, 4, 4, 3, 7],
+                        [7, 3, 4, 4, 4, 4, 3, 7],
+                        [7, 3, 4, 4, 4, 4, 3, 7],
+                        [7, 3, 4, 4, 4, 4, 3, 7],
+                        [0, 0, 3, 3, 3, 3, 0, 0],
+                        [10, 0, 7, 7, 7, 7, 0, 10]]
+        self.agentRules = RulesAgent(self.color)
+        self.agentAledoRules = RulesAledoAgent(self.color)
 
 
-    def positionChange(self,board,game):
-        for i in range(8):
-            for j in range(8):
-                actualBoard = game.getBoard()
-                if actualBoard[i][j] == 0 and board[i][j] != actualBoard[i][j]:
-                    return (i,j)
+    def getAction(self,game):
+        self.agentAledoRules.getAction(game)
+        betterMoves = self.agentAledoRules.getMoves()
+        minimizeMoves = []
+        min = float('inf')
+        for move in betterMoves:
+            numberMoves = len(game.getOpponentMove(move[0], move[1], game.getOpponentColor(self.color)))
+            if numberMoves <= min:
+                minimizeMoves.append(move)
+                min = numberMoves
+        random_number = randint(0, len(minimizeMoves)) - 1
+        return minimizeMoves[random_number]
+
+# Agente no heuristico
+class MonteCarloAgent():
+
+    def __init__(self, color, evaluator):
+        self.color = color
+        self.root = None
+        self.turn = self.color
+        self.evaluator = evaluator
+
+    def getAction(self,game):
+        root = Node.Node(game,self.color,)
+        for i in range(100):
+            node = root.select()
+            self.turn = node.getTurn()
+            result = self.simulate(node.getGame())
+            node.backpropagate(result)
+        betterNode = root.bestChild()
+        child = betterNode.getGame()
+        return child.getLastMove()
+
+    # Simula la partida actual y devuelve el ganador o si es empate
+    def simulate(self,game):
+        gameSimulate = copy.deepcopy(game)
+        turn = self.turn
+        black = RandomAgent(2)
+        white = RandomAgent(1)
+        while True:
+            moves = gameSimulate.getMoves(turn)
+            if moves != []:
+                (x, y) = (-1, -1)
+                if turn == 2:
+                    (x, y) = black.getAction(gameSimulate)
+                else:
+                    (x, y) = white.getAction(gameSimulate)
+                gameSimulate.doMove(turn, x, y)
+            if turn == 1:
+                turn = 2
+            else:
+                turn = 1
+            if gameSimulate.isEnd():
+                break;
+        result = gameSimulate.getWinner
+        if result == 1 and self.color == 1:
+            return 1
+        elif result == 2 and self.color == 2:
+            return 1
+        else:
+            return -1
 
 

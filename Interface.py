@@ -40,6 +40,7 @@ class Board():
 
     # Dibuja el tablero
     def visualizeGrid(self, matrix):
+
         for row in range(len(matrix)):
             for column in range(len(matrix)):
                 y = (row + 1) * self.width - 42.5
@@ -70,6 +71,8 @@ class Board():
         pos = (None, None)
         while pos[0] == None:
             for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    pg.quit()
                 if event.type == pg.MOUSEBUTTONUP:
                     pos = pg.mouse.get_pos()
         y = int(pos[0] / (self.dimBoard[0] / 8))
@@ -93,6 +96,7 @@ class Board():
         pg.display.update()
 
     def printWinner(self,winner):
+        print(winner)
         font = pg.font.SysFont('Arial', 50)
         self.screen.blit(font.render(str(winner), True, (0, 0, 255)), (200, 340))
         pg.display.update()
@@ -117,8 +121,8 @@ class Menu():
         self.menu = pgmenu.Menu(500, 500, 'Othello',
                                 theme=pgmenu.themes.THEME_GREEN)
 
-        self.menu.add_selector('Jugador Negras :', [['Persona', 1], ['Aleatorio', 2], ['Reglas', 3], ['ReglasAledo',4], ['Minimax', 5]], onchange=self.playerBlack)
-        self.menu.add_selector('Jugador Blancas :', [['Persona', 1], ['Aleatorio', 2],['Reglas', 3],['ReglasAledo',4], ['Minimax', 5]], onchange=self.playerWhite)
+        self.menu.add_selector('Jugador Negras :', [['Persona', 1], ['Aleatorio', 2], ['Reglas', 3], ['ReglasAledo',4], ['AlphaBeta', 5], ['Minimax',6],['MCTS',7]], onchange=self.playerBlack)
+        self.menu.add_selector('Jugador Blancas :', [['Persona', 1], ['Aleatorio', 2],['Reglas', 3],['ReglasAledo',4], ['AlphaBeta', 5], ['Minimax',6],['MCTS',7]], onchange=self.playerWhite)
         self.menu.add_button('Jugar', self.startGame)
         self.menu.add_button('Salir', pgmenu.events.EXIT)
         self.menu.mainloop(self.screen)

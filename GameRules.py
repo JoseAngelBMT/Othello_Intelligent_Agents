@@ -2,6 +2,7 @@ import numpy as np
 import copy
 import random
 
+# Estado de juego, representacion del tablero y reglas del juego
 class Othello:
 
     #Inicializacion del tablero
@@ -14,6 +15,7 @@ class Othello:
         self.board[4, 4] = 1
 
         self.directions = [(0,-1),(0,1),(-1,0),(1,0),(-1,-1),(1,-1),(-1,1),(1,1)] #ARRIBA, ABAJO, IZQ, DER, ARR-IZQ,ARR-DER, AB-IZQ, AR-DER
+        self.lastMove = None
 
     #Obtener el valor de una celda del tablero
     def getValue(self,i,j):
@@ -35,10 +37,7 @@ class Othello:
 
     #Devuelve los movimientos validos para una ficha de un color
     def validMoves(self,i,j,color):
-        if color == 1:
-            opponent = 2
-        else:
-            opponent = 1
+        opponent = self.getOpponentColor(color)
 
         moves = []
         for (d1,d2) in self.directions:
@@ -74,6 +73,7 @@ class Othello:
     def doMove(self,color, i,j):
         if (i,j) in self.getMoves(color):
             self.board[i][j] = color
+            self.lastMove = (i,j)
             # Voltea las fichas de distinto color en direccion a una ficha del color actual
             for (d1,d2) in self.directions:
                 self.flipCoin(color,i,j,d1,d2)
@@ -81,10 +81,7 @@ class Othello:
     # Voltea las fichas al colocar una nueva
     def flipCoin(self,color,i,j,d1,d2):
 
-        if color == 1:
-            opponent = 2
-        else:
-            opponent = 1
+        opponent = self.getOpponentColor(color)
 
         coinsFlip = []  # Posicion de las fichas que se voltearan
         x = i + d1
@@ -137,56 +134,43 @@ class Othello:
         game.doMove(color,i,j)
         return game.getMoves(opponentColor)
 
+    # Devuelve el color del oponente pasado un color de jugador
+    def getOpponentColor(self, color):
+        if color == 1:
+            return 2
+        else:
+            return 1
+
+    def getLastMove(self):
+        return self.lastMove
+
+    def getWinner(self):
+        white, black = self.countColors()
+        if white > black:
+            return 1
+        elif black > white:
+            return 2
+        else:
+            return 0
+
     # Devuelve todos los estados para un movimiento
-    def getNextStates(self,color):
+    def getNextStates(self,color, heuristic_function):
         moves = self.getMoves(color)
         states = []
         for move in moves:
             game = copy.deepcopy(self)
             game.doMove(color, move[0], move[1])
             states.append(game)
-        states = self.sortStates(color, states)
+        if heuristic_function != None:
+            states = self.sortStates(color, states,heuristic_function)
         return states
 
 
-    def getOpponentColor(self,color):
-        if color == 1:
-            return 2
-        else:
-            return 1
-
-    # Obtiene el valor heuristico
-    def getHeuristic(self,color,newGame):
-        score = 0
-        weights = [[100, -20, 10,  7,  7, 10, -20, 100],
-                   [-20, -50, -4, -4, -4, -4, -50, -20],
-                   [10,   -4, -2, -2, -2, -2,  -4, 10],
-                   [7,    -4, -2,  1,  1, -2,  -4, 7],
-                   [7,    -4, -2,  1,  1, -2,  -4, 7],
-                   [10,   -4, -2, -2, -2, -2,  -4, 10],
-                   [-20, -50, -4, -4, -4, -4, -50, -20],
-                   [100, -20, 10,  7,  7, 10, -20, 100]]
-
-        # Si el oponente no tiene ningun movimiento, el estado es muy bueno
-        if len(newGame.getMoves(self.getOpponentColor(color))) == 0:
-            return 100000000
-
-        newboard = newGame.getBoard()
-        for i in range(8):
-            for j in range(8):
-                if newboard[i][j] == color:
-                    score += weights[i][j]
-                elif newboard[i][j] == self.getOpponentColor(color):
-                    score += -(weights[i][j])
-
-        return score
-
-    #Ordena los diferentes estados pasados por parametr, segun una heuristica dada
-    def sortStates(self,color, states):
+    #Ordena los diferentes estados pasados por parametro, segun una heuristica dada
+    def sortStates(self,color, states, heuristic_function):
         scoreList = {}
-        for i in states:
-            score = self.getHeuristic(color, i)
-            scoreList[i] = score
+        for game in states:
+            score = heuristic_function(color, game)
+            scoreList[game] = score
         scoreList = dict(sorted(scoreList.items(),reverse=True, key=lambda item: item[1]))
         return list(scoreList.keys())
-

@@ -3,13 +3,19 @@ import Agent as ag
 import GameRules as gr
 import pygame as pg
 import time
+import Evaluator as ev
 
 
 class Game():
     def __init__(self):
+
+        self.nmoves = 1
         # Menu para elegir a los jugadores
         self.menu = Interface.Menu()
         self.playerBlack, self.playerWhite = self.menu.returnPlayers()
+        self.evaluator1 = ev.Evaluator(1)
+        self.evaluator2 = ev.Evaluator(4)
+
         self.selectPlayers()
 
         self.board = Interface.Board()
@@ -17,6 +23,7 @@ class Game():
         # Crea el juego
         self.game = gr.Othello()
         self.startGame()
+
 
     # Crea el tipo de los dos jugadores
     def selectPlayers(self):
@@ -27,7 +34,11 @@ class Game():
         elif self.playerBlack == 4:
             self.agentBlack = ag.RulesAledoAgent(2)
         elif self.playerBlack == 5:
-            self.agentBlack = ag.MiniMaxAgent(2)
+            self.agentBlack = ag.AlphaBetaAgent(2, self.evaluator1)
+        elif self.playerBlack == 6:
+            self.agentBlack = ag.MinimaxAgent(2, self.evaluator1)
+        elif self.playerBlack == 7:
+            self.agentBlack = ag.MonteCarloAgent(2,None)
 
         if self.playerWhite == 2:
             self.agentWhite = ag.RandomAgent(1)
@@ -36,7 +47,11 @@ class Game():
         elif self.playerWhite == 4:
             self.agentWhite = ag.RulesAledoAgent(1)
         elif self.playerWhite == 5:
-            self.agentWhite = ag.MiniMaxAgent(1)
+            self.agentWhite = ag.AlphaBetaAgent(1 , self.evaluator2)
+        elif self.playerWhite == 6:
+            self.agentWhite = ag.MinimaxAgent(1 , self.evaluator2)
+        elif self.playerWhite == 7:
+            self.agentWhite = ag.MonteCarloAgent(1, None)
 
     # Devuelve la posicion segun el tipo de jugador
     def getPosition(self,turn):
@@ -58,7 +73,7 @@ class Game():
         (x,y) = (-1,-1)
 
         while True:
-
+            pg.event.pump() # Permite que la ventana no se quede colgada cuando no es necesario controlar eventos de teclado y raton
             # Interfaz
             self.board.printBoard()
             self.board.visualizeGrid(actualBoard)
@@ -96,7 +111,8 @@ class Game():
         validMove = False
         while not validMove:
             (x, y) = self.getPosition(turn)
-
+            print(self.nmoves,"-> Turno: ", turn, " Movimiento: ",(x+1,y+1))
+            self.nmoves +=1
             if (x, y) in moves:
                 validMove = True
             else:
@@ -113,6 +129,8 @@ class Game():
             self.board.printWinner('GANA EL JUGADOR NEGRO')
         else:
             self.board.printWinner('EMPATE')
+
+        print("Nodes: ",self.agentBlack.getNodes())
 
 class Main():
     game = Game()
