@@ -14,7 +14,7 @@ class Game():
         self.menu = Interface.Menu()
         self.playerBlack, self.playerWhite = self.menu.returnPlayers()
         self.evaluator1 = ev.Evaluator(1)
-        self.evaluator2 = ev.Evaluator(4)
+        self.evaluator2 = ev.Evaluator(2)
 
         self.selectPlayers()
 
@@ -34,9 +34,9 @@ class Game():
         elif self.playerBlack == 4:
             self.agentBlack = ag.RulesAledoAgent(2)
         elif self.playerBlack == 5:
-            self.agentBlack = ag.AlphaBetaAgent(2, self.evaluator1)
+            self.agentBlack = ag.AlphaBetaAgent(2, 4,self.evaluator2)
         elif self.playerBlack == 6:
-            self.agentBlack = ag.MinimaxAgent(2, self.evaluator1)
+            self.agentBlack = ag.MinimaxAgent(2, 1,self.evaluator2)
         elif self.playerBlack == 7:
             self.agentBlack = ag.MonteCarloAgent(2,None)
 
@@ -47,9 +47,9 @@ class Game():
         elif self.playerWhite == 4:
             self.agentWhite = ag.RulesAledoAgent(1)
         elif self.playerWhite == 5:
-            self.agentWhite = ag.AlphaBetaAgent(1 , self.evaluator2)
+            self.agentWhite = ag.AlphaBetaAgent(1 , 4, self.evaluator1)
         elif self.playerWhite == 6:
-            self.agentWhite = ag.MinimaxAgent(1 , self.evaluator2)
+            self.agentWhite = ag.MinimaxAgent(1 , 1, self.evaluator1)
         elif self.playerWhite == 7:
             self.agentWhite = ag.MonteCarloAgent(1, None)
 
@@ -130,7 +130,7 @@ class Game():
         else:
             self.board.printWinner('EMPATE')
 
-        print("Nodes: ",self.agentBlack.getNodes())
+        print("Nodes: ",self.agentBlack.getNodesandDepth())
 
 class Main():
     game = Game()

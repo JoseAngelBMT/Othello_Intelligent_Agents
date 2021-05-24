@@ -95,7 +95,7 @@ class RulesAledoAgent():
             for j in range(8):
                 des = j + 2
                 if des < 8:
-                    # Si una posicion del perimetro es cogida por el oponente, las posiciones de al lado son peores. Viendo los resultados, los empeora
+                    # Si una posicion del perimetro es cogida por el oponente, las posiciones de al lado son peores. Viendo los resultados, los empeora (NO SE HA ANADIDO)
                     if perimeter[i][j] == opponentColor and perimeter[i][j+1] == 0 and perimeter[i][des] == opponentColor:
                         if i == 0:
                             self.weights[i][j+1] = 8
@@ -130,17 +130,18 @@ class RulesAledoAgent():
 
 
 class AlphaBetaAgent():
-
-    def __init__(self,color,evaluator):
+    nodes = 0
+    def __init__(self,color ,depth ,evaluator):
         self.color = color
         self.heuristic = 0
         self.evaluator = evaluator
+        self.initialDepth = depth
 
         self.nodes = 0
 
 
     def getAction(self, game):
-        board = self.bestMove(game, 4)
+        board = self.bestMove(game, self.initialDepth)
         return board.getLastMove()
 
     def bestMove(self, game, depth):
@@ -190,26 +191,27 @@ class AlphaBetaAgent():
                     break
             return alpha
 
-    def getNodes(self):
-        return self.nodes
+    def getNodesandDepth(self):
+        return (self.nodes, self.initialDepth)
 
 class MinimaxAgent():
 
-    def __init__(self,color, evaluator):
+    def __init__(self,color, depth, evaluator):
         self.color = color
         self.heuristic = 0
         self.evaluator = evaluator
+        self.initialDepth = depth
 
         self.nodes = 0
 
     def getAction(self, game):
-        board = self.bestMove(game,2)
+        board = self.bestMove(game,self.initialDepth)
         return board.getLastMove()
 
     def bestMove(self,game,depth):
         bestMove = None
         score = float('-inf')
-        for child in game.getNextStates(self.color, self.evaluator.heuristicValue()):
+        for child in game.getNextStates(self.color, None):
             self.nodes += 1
             newScore = self.minimax(child,depth-1,False)
             if score < newScore:
@@ -227,7 +229,7 @@ class MinimaxAgent():
 
         if actualPlayer:
             newScore = float('-inf')
-            for child in game.getNextStates(self.color, self.evaluator.heuristicValue()):
+            for child in game.getNextStates(self.color, None):
                 self.nodes += 1
                 score = self.minimax(child, depth - 1, False)
                 if score > newScore:
@@ -236,15 +238,15 @@ class MinimaxAgent():
 
         else:
             newScore = float('inf')
-            for child in game.getNextStates(opponent, self.evaluator.heuristicValue()):
+            for child in game.getNextStates(opponent, None):
                 self.nodes += 1
                 score = self.minimax(child, depth - 1, True)
                 if score < newScore:
                     newScore = score
             return newScore
 
-    def getNodes(self):
-        return self.nodes
+    def getNodesandDepth(self):
+        return (self.nodes, self.initialDepth)
 
 # Union de los dos agentes de reglas anteriores
 class UnionRulesAgent():
@@ -286,7 +288,7 @@ class MonteCarloAgent():
         self.evaluator = evaluator
 
     def getAction(self,game):
-        root = Node.Node(game,self.color,)
+        root = Node.Node(game,self.color)
         for i in range(100):
             node = root.select()
             self.turn = node.getTurn()
