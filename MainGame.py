@@ -14,7 +14,7 @@ class Game():
         self.menu = Interface.Menu()
         self.playerBlack, self.playerWhite = self.menu.returnPlayers()
         self.evaluator1 = ev.Evaluator(1)
-        self.evaluator2 = ev.Evaluator(2)
+        self.evaluator2 = ev.Evaluator(1)
 
         self.selectPlayers()
 
@@ -34,11 +34,13 @@ class Game():
         elif self.playerBlack == 4:
             self.agentBlack = ag.RulesAledoAgent(2)
         elif self.playerBlack == 5:
-            self.agentBlack = ag.AlphaBetaAgent(2, 4,self.evaluator2)
+            self.agentBlack = ag.UnionRulesAgent(2)
         elif self.playerBlack == 6:
-            self.agentBlack = ag.MinimaxAgent(2, 1,self.evaluator2)
+            self.agentBlack = ag.AlphaBetaAgent(2, 4, self.evaluator1)
         elif self.playerBlack == 7:
-            self.agentBlack = ag.MonteCarloAgent(2,None)
+            self.agentBlack = ag.MinimaxAgent(2, 5, self.evaluator1)
+        elif self.playerBlack == 8:
+            self.agentBlack = ag.MonteCarloAgent(2, 60)
 
         if self.playerWhite == 2:
             self.agentWhite = ag.RandomAgent(1)
@@ -47,11 +49,14 @@ class Game():
         elif self.playerWhite == 4:
             self.agentWhite = ag.RulesAledoAgent(1)
         elif self.playerWhite == 5:
-            self.agentWhite = ag.AlphaBetaAgent(1 , 4, self.evaluator1)
+            self.agentWhite = ag.RulesAledoAgent(1)
         elif self.playerWhite == 6:
-            self.agentWhite = ag.MinimaxAgent(1 , 1, self.evaluator1)
+            self.agentWhite = ag.AlphaBetaAgent(1, 4, self.evaluator2)
         elif self.playerWhite == 7:
-            self.agentWhite = ag.MonteCarloAgent(1, None)
+            self.agentWhite = ag.MinimaxAgent(1, 5, self.evaluator2)
+        elif self.playerWhite == 8:
+            self.agentWhite = ag.MonteCarloAgent(1, 60)
+
 
     # Devuelve la posicion segun el tipo de jugador
     def getPosition(self,turn):
@@ -101,6 +106,7 @@ class Game():
         self.getWinner()
         time.sleep(3)
         pg.quit()
+        Game()
 
 
     # Realiza un turno completo para el jugador
@@ -130,7 +136,10 @@ class Game():
         else:
             self.board.printWinner('EMPATE')
 
-        print("Nodes: ",self.agentBlack.getNodesandDepth())
+        if self.agentBlack.__class__.__name__ == "AlphaBetaAgent" or self.agentBlack.__class__.__name__  == "MinimaxAgent":
+            print("Negro Nodes: ",self.agentBlack.getNodesandDepth())
+        if self.agentWhite.__class__.__name__ == "AlphaBetaAgent" or self.agentWhite.__class__.__name__  == "MinimaxAgent":
+            print("Blanco Nodes: ",self.agentWhite.getNodesandDepth())
 
 class Main():
     game = Game()

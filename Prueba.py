@@ -1,28 +1,20 @@
-import GameRules as gm
-import Agent as ag
-import numpy as np
+import math
 import pandas as pd
 
+"""df = pd.read_csv('./othello.csv', index_col=0)
+agente1 = 'Reglas '
+agente2 = 'RulesAgent'
 
+victoriasBlanco = df.groupby(['White']).sum()['Win']
+victoriasNegro = df.groupby(['Black']).sum()['Lose']
+print(victoriasBlanco)
+print(victoriasNegro)
+print(victoriasBlanco + victoriasNegro)"""
 
-def printBoard(board):
-    for row in board:
-        print(row)
+l = [1,2,3,4,5,6]
 
-game = gm.Othello()
-agente = ag.RulesAledoAgent(2)
+del l[0]
 
-
-board = game.getBoard()
-
-board = [[1, 1, 1, 1, 1, 1, 1, 1],
-         [0, 0, 0, 0, 0, 1, 1, 1],
-         [0, 0, 0, 0, 0, 0, 1, 1],
-         [0, 0, 0, 0, 0, 0, 0, 1],
-         [0, 0, 0, 0, 0, 0, 0, 0],
-         [0, 0, 0, 0, 0, 0, 1, 1],
-         [0, 0, 0, 0, 0, 1, 1, 1],
-         [0, 0, 0, 0, 1, 1, 1, 1]]
-game.setBoard(board)
+print(l)
 
 

@@ -3,7 +3,7 @@ import GameRules as gm
 import Evaluator as ev
 import pandas as pd
 import time
-
+import copy
 
 class Simulation():
     def __init__(self,agent1,agent2,nGames,ev1 = "", ev2 = ""):
@@ -40,7 +40,8 @@ class Simulation():
                 turn = 1
             if game.isEnd():
                 break;
-        return game.getWinner()
+        winner = game.getWinner()
+        return winner
 
     def simulate(self):
         len = self.nGames
@@ -59,6 +60,7 @@ class Simulation():
                 empates += 1
             totalTime += final_time
 
+
         self.insertRow(self.nameW + str(self.ev1), self.nameB + str(self.ev2), agentW, agentB, empates, totalTime)
         self.df.to_csv("./othello.csv")
         return agentW, agentB, empates
@@ -68,67 +70,62 @@ class Simulation():
         try:
             self.df = pd.read_csv("othello.csv", index_col=0)
         except:
-            self.df = pd.DataFrame(columns=["White", "Black", "Win","Lose","Draw", "Time", "NodesW", "NodesB", "DepthW", "DepthB"])
+            self.df = pd.DataFrame(columns=["White", "Black", "Win","Lose","Draw", "Time", "NodesW", "NodesB", "DepthW", "DepthB","MovesW","MovesB","TimeMoveW","TimeMoveB"])
             self.df.to_csv("./othello.csv", index_label= "Index")
         print(self.df.head)
     def insertRow(self,agent1, agent2, win, lose, draw, time):
-        nodesw, nodesb, depthw, depthb = None, None, None, None
-        if self.nameW.startswith("AlphaBeta") or self.nameW.startswith("Minimax"):
+
+        nodesw, nodesb, depthw, depthb, movesw, movesb, timeMovew, timeMoveb = None, None, None, None, None, None, None, None
+        if self.nameW.startswith("AlphaBeta") or self.nameW.startswith("Minimax") or self.nameW.startswith("Monte"):
             nodesw, depthw = self.agent1.getNodesandDepth()
+            timeMovew, movesw = self.agent1.getTimeandMoves()
 
-        if self.nameB.startswith("AlphaBeta") or self.nameB.startswith("Minimax"):
+        if self.nameB.startswith("AlphaBeta") or self.nameB.startswith("Minimax") or self.nameB.startswith("Monte"):
             nodesb, depthb = self.agent2.getNodesandDepth()
+            timeMoveb, movesb = self.agent2.getTimeandMoves()
 
-        df2 = pd.DataFrame([[agent1, agent2, win, lose, draw, time, nodesw, nodesb, depthw, depthb]], columns=list(self.df))
+        df2 = pd.DataFrame([[agent1, agent2, win, lose, draw, time, nodesw, nodesb, depthw, depthb, movesw, movesb, timeMovew, timeMoveb]], columns=list(self.df))
         self.df = self.df.append(df2, ignore_index=True)
 
 
 def simulateRulesandRandom(number_simulations):
     # White vs Black
     # Random vs Rules
-    ag1 = ag.RandomAgent(1)
-    ag2 = ag.RulesAgent(2)
-    sim = Simulation(ag1, ag2, number_simulations)
+    ag1_1 = ag.RandomAgent(1)
+    ag2_1 = ag.RulesAgent(2)
+    sim = Simulation(ag1_1, ag2_1, number_simulations)
 
     # Rules vs Random
-    ag1 = ag.RulesAgent(1)
-    ag2 = ag.RandomAgent(2)
-    sim = Simulation(ag1, ag2, number_simulations)
+    ag1_2 = ag.RulesAgent(1)
+    ag2_2 = ag.RandomAgent(2)
+    sim = Simulation(ag1_2, ag2_2, number_simulations)
 
     # Rules vs RulesAledo
-    ag1 = ag.RulesAgent(1)
-    ag2 = ag.RulesAledoAgent(2)
-    sim = Simulation(ag1, ag2, number_simulations)
+    ag1_3 = ag.RulesAgent(1)
+    ag2_3 = ag.RulesAledoAgent(2)
+    sim = Simulation(ag1_3, ag2_3, number_simulations)
 
     # RulesAledo vs Rules
-    ag1 = ag.RulesAledoAgent(1)
-    ag2 = ag.RulesAgent(2)
-    sim = Simulation(ag1, ag2, number_simulations)
+    ag1_4 = ag.RulesAledoAgent(1)
+    ag2_4 = ag.RulesAgent(2)
+    sim = Simulation(ag1_4, ag2_4, number_simulations)
 
     # RulesAledo vs RulesUnion
-    ag1 = ag.RulesAledoAgent(1)
-    ag2 = ag.UnionRulesAgent(2)
-    sim = Simulation(ag1, ag2, number_simulations)
+    ag1_5 = ag.RulesAgent(1)
+    ag2_5 = ag.UnionRulesAgent(2)
+    sim = Simulation(ag1_5, ag2_5, number_simulations)
 
     # RulesUnion vs RulesAledo
-    ag1 = ag.UnionRulesAgent(1)
-    ag2 = ag.AgentRulesAgent(2)
-    sim = Simulation(ag1, ag2, number_simulations)
+    ag1_6 = ag.UnionRulesAgent(1)
+    ag2_6 = ag.RulesAgent(2)
+    sim = Simulation(ag1_6, ag2_6, number_simulations)
 
 def simulateEvaluator():
     # Alfabeta vs alfabeta variando evaluator
-    for i in range(1, 5):
-        for j in range(1, 5):
-            if i == 4:
-                i = 5
-            if j == 4:
-                j = 5
-            ev1 = ev.Evaluator(i)
-            ev2 = ev.Evaluator(j)
-
-            ag1 = ag.AlphaBetaAgent(1, 4, ev1)
-            ag2 = ag.AlphaBetaAgent(2, 4, ev2)
-            sim = Simulation(ag1, ag2, 1, i, j)
+    for i in range(1, 7):
+        for j in range(1, 7):
+            if i != j:
+                sim = Simulation(ag.AlphaBetaAgent(1, 4, ev.Evaluator(i)), ag.AlphaBetaAgent(2, 4, ev.Evaluator(j)), 1, i, j)
 
 # Mejores evaluadores son 1 y 3, depth
 def simulateBestAlphaModifyDepth(evaluator):
@@ -145,15 +142,15 @@ def simulateAlpha():
     ev1 = ev.Evaluator(1)
     ev2 = ev.Evaluator(1)
 
-    #Alfabeta vs Union
+    """#Alfabeta vs Union
     ag1 = ag.AlphaBetaAgent(1,4,ev1)
     ag2 = ag.UnionRulesAgent(2)
-    sim = Simulation(ag1, ag2, 500, 1)
+    sim = Simulation(ag1, ag2, 250, 1)
 
     # Union vs Alfabeta
     ag1 = ag.UnionRulesAgent(1)
     ag2 = ag.AlphaBetaAgent(2,4,ev1)
-    sim = Simulation(ag1, ag2, 500, None, 1)
+    sim = Simulation(ag1, ag2, 250, None, 1)"""
 
     # Determinista
     # Alfabeta vs Minimax
@@ -169,18 +166,59 @@ def simulateAlpha():
     #Alfabeta vs MCTS
     ag1 = ag.AlphaBetaAgent(1, 4, ev1)
     ag2 = ag.MonteCarloAgent(2, None)
-    sim = Simulation(ag1, ag2, 500, 1)
+    sim = Simulation(ag1, ag2, 250, 1)
 
     # MCTS vs Alfabeta
     ag1 = ag.MonteCarloAgent(1,None)
     ag2 = ag.AlphaBetaAgent(2, 4, ev1)
-    sim = Simulation(ag1, ag2, 500, None, 1)
+    sim = Simulation(ag1, ag2, 250, None, 1)
 
+def simulateDepthAB():
+    ev1 = ev.Evaluator(1)
+    ev2 = ev.Evaluator(1)
+
+    for i in range(13):
+        sim = Simulation(ag.AlphaBetaAgent(1, i, ev1), ag.AlphaBetaAgent(2, 4, ev2), 1, "", 1)
+
+        sim = Simulation(ag.AlphaBetaAgent(1, 4, ev2), ag.AlphaBetaAgent(2, i, ev1), 1, 1, "")
+
+def simulateDepthM():
+    ev1 = ev.Evaluator(1)
+    ev2 = ev.Evaluator(1)
+
+    for i in range(1,9):
+        sim = Simulation(ag.MinimaxAgent(1, i, ev1), ag.AlphaBetaAgent(2, 4, ev2), 1, "", 1)
+
+        sim = Simulation(ag.AlphaBetaAgent(1, 4, ev2), ag.MinimaxAgent(2, i, ev1), 1, 1, "")
+
+def simulateMCTS():
+    Simulation(ag.MonteCarloAgent(1, 10), ag.UnionRulesAgent(2), 50)
+
+    Simulation(ag.UnionRulesAgent(1), ag.MonteCarloAgent(2, 10), 50)
+
+    for i in range(20,80,20):
+        Simulation(ag.MonteCarloAgent(1, i), ag.UnionRulesAgent(2), 50)
+
+        Simulation(ag.UnionRulesAgent(1), ag.MonteCarloAgent(2, i), 50)
+        
+def tiempoMCTS():
+    Simulation(ag.MonteCarloAgent(1, 0.47), ag.UnionRulesAgent(2), 50)
+
+    Simulation(ag.UnionRulesAgent(1), ag.MonteCarloAgent(2, 0.47), 50)
+
+    Simulation(ag.MonteCarloAgent(1, 0.93), ag.UnionRulesAgent(2), 50)
+
+    Simulation(ag.UnionRulesAgent(1), ag.MonteCarloAgent(2, 0.93), 50)
+
+    Simulation(ag.MonteCarloAgent(1, 1.89), ag.UnionRulesAgent(2), 50)
+
+    Simulation(ag.UnionRulesAgent(1), ag.MonteCarloAgent(2, 1.89), 50)
+
+    Simulation(ag.MonteCarloAgent(1, 3.06), ag.UnionRulesAgent(2), 50)
+
+    Simulation(ag.UnionRulesAgent(1), ag.MonteCarloAgent(2, 3.06), 50)
+
+    
 
 class Main():
-    simulateBestAlphaModifyDepth(1)
-
-
-
-
-
+    tiempoMCTS()

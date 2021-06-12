@@ -2,6 +2,8 @@ from random import randint
 import copy
 import time
 import Node
+import time
+import multiprocessing as mp
 
 class RandomAgent():
 
@@ -11,7 +13,9 @@ class RandomAgent():
     # Un movimiento aleatorio de los movimientos legales
     def getAction(self, game):
         moves = game.getMoves(self.color)
-        random_number = randint(0, len(moves)) - 1
+        if moves == []:
+            return (None, None)
+        random_number = randint(0, len(moves) -1)
         return moves[random_number]
 
 class RulesAgent():
@@ -35,7 +39,8 @@ class RulesAgent():
                 min = numberMoves
 
         # Dentro de todos los movimientos minimos se elige aleatoriamente para que las partidas no sean iguales
-        random_number = randint(0, len(betterMoves)) - 1
+        random_number = randint(0, len(betterMoves) - 1)
+
         return betterMoves[random_number]
 
     # Comprueba si la posicion esta en una esquina del tablero
@@ -71,7 +76,7 @@ class RulesAledoAgent():
                 betterMoves.append(move)
 
         self.moves = betterMoves
-        random_number = randint(0, len(betterMoves)) - 1
+        random_number = randint(0, len(betterMoves) - 1)
         return betterMoves[random_number]
 
     # Actualiza la matriz de pesos
@@ -130,7 +135,6 @@ class RulesAledoAgent():
 
 
 class AlphaBetaAgent():
-    nodes = 0
     def __init__(self,color ,depth ,evaluator):
         self.color = color
         self.heuristic = 0
@@ -138,30 +142,39 @@ class AlphaBetaAgent():
         self.initialDepth = depth
 
         self.nodes = 0
+        self.timeMove = 0
+        self.moves = 0
 
 
     def getAction(self, game):
+        start_time = time.time()
         board = self.bestMove(game, self.initialDepth)
+        final_time = time.time() - start_time
+        self.timeMove += final_time
+        self.moves += 1
         return board.getLastMove()
 
     def bestMove(self, game, depth):
         bestMove = None
         alpha = float('inf')
         beta = float('-inf')
-        score = float('-inf')
+        newScore = float('-inf')
         for child in game.getNextStates(self.color, self.evaluator.heuristicValue()):
             self.nodes += 1
             if bestMove == None:
                 bestMove = copy.copy(child)
-            newScore = self.alphabeta(child, depth - 1, alpha, beta, False)
-            if score < newScore:
-                score = newScore
+            score = self.alphabeta(child, depth - 1, alpha, beta, False)
+            if score > newScore:
+                newScore = score
+                alpha = newScore
                 bestMove = copy.copy(child)
+            if beta <= alpha:
+                break;
         return bestMove
 
     def alphabeta(self, game, depth, alpha, beta, actualPlayer):
 
-        if depth == 0:
+        if depth == 0 or game.isEnd():
             function = self.evaluator.heuristicValue()
             return function(self.color,game)
 
@@ -170,14 +183,14 @@ class AlphaBetaAgent():
         if actualPlayer:
             newScore = float('-inf')
             for child in game.getNextStates(self.color,self.evaluator.heuristicValue()):
-                self.nodes +=1
+                self.nodes += 1
                 score = self.alphabeta(child, depth - 1,alpha, beta, False)
                 if score > newScore:
                     newScore = score
-                    beta = newScore
+                    alpha = newScore
                 if beta <= alpha:
                     break
-            return beta
+            return alpha
 
         else:
             newScore = float('inf')
@@ -186,16 +199,18 @@ class AlphaBetaAgent():
                 score = self.alphabeta(child, depth - 1, alpha, beta, True)
                 if score < newScore:
                     newScore = score
-                    alpha = newScore
+                    beta = newScore
                 if beta <= alpha:
                     break
-            return alpha
+            return beta
 
     def getNodesandDepth(self):
         return (self.nodes, self.initialDepth)
 
-class MinimaxAgent():
+    def getTimeandMoves(self):
+        return (self.timeMove/self.moves, self.moves)
 
+class MinimaxAgent():
     def __init__(self,color, depth, evaluator):
         self.color = color
         self.heuristic = 0
@@ -203,19 +218,30 @@ class MinimaxAgent():
         self.initialDepth = depth
 
         self.nodes = 0
+        self.timeMove = 0
+        self.moves = 0
 
     def getAction(self, game):
+
+        start_time = time.time()
         board = self.bestMove(game,self.initialDepth)
+        final_time = time.time() - start_time
+        self.timeMove += final_time
+        self.moves += 1
+
         return board.getLastMove()
+
 
     def bestMove(self,game,depth):
         bestMove = None
-        score = float('-inf')
-        for child in game.getNextStates(self.color, None):
+        newScore = float('-inf')
+        for child in game.getNextStates(self.color, self.evaluator.heuristicValue()):
+            if bestMove == None:
+                bestMove = copy.copy(child)
             self.nodes += 1
-            newScore = self.minimax(child,depth-1,False)
-            if score < newScore:
-                score = newScore
+            score = self.minimax(child,depth-1,False)
+            if score > newScore:
+                newScore = score
                 bestMove = copy.copy(child)
         return bestMove
 
@@ -229,7 +255,7 @@ class MinimaxAgent():
 
         if actualPlayer:
             newScore = float('-inf')
-            for child in game.getNextStates(self.color, None):
+            for child in game.getNextStates(self.color, self.evaluator.heuristicValue()):
                 self.nodes += 1
                 score = self.minimax(child, depth - 1, False)
                 if score > newScore:
@@ -238,7 +264,7 @@ class MinimaxAgent():
 
         else:
             newScore = float('inf')
-            for child in game.getNextStates(opponent, None):
+            for child in game.getNextStates(opponent, self.evaluator.heuristicValue()):
                 self.nodes += 1
                 score = self.minimax(child, depth - 1, True)
                 if score < newScore:
@@ -247,6 +273,9 @@ class MinimaxAgent():
 
     def getNodesandDepth(self):
         return (self.nodes, self.initialDepth)
+
+    def getTimeandMoves(self):
+        return (self.timeMove/self.moves, self.moves)
 
 # Union de los dos agentes de reglas anteriores
 class UnionRulesAgent():
@@ -281,45 +310,62 @@ class UnionRulesAgent():
 # Agente no heuristico
 class MonteCarloAgent():
 
-    def __init__(self, color, evaluator):
+    def __init__(self, color, iterations):
         self.color = color
         self.root = None
         self.turn = self.color
-        self.evaluator = evaluator
+        self.iterations = int(iterations)
+
+        self.nodes = 0
+        self.timeMove = 0
+        self.moves = 0
 
     def getAction(self,game):
-        root = Node.Node(game,self.color)
-        for i in range(100):
-            node = root.select()
-            self.turn = node.getTurn()
-            result = self.simulate(node.getGame())
+        start_time = time.time()
+        root = Node.Node(copy.deepcopy(game),self.color)
+        #timeCondition = time.time()
+        #timeFinish = time.time() - timeCondition
+        #while (time.time() - timeCondition) <= self.iterations:
+        for i in range(self.iterations):
+            node = self.select(root)
+            result = self.simulate(node.getGame(), node.getTurn())
             node.backpropagate(result)
-        betterNode = root.bestChild()
-        child = betterNode.getGame()
+
+        bestChild = root.bestChild()
+        child = bestChild.getGame()
+
+        final_time = time.time() - start_time
+        self.timeMove += final_time
+        self.moves +=1
+        self.nodes += root.getNodes()
+
         return child.getLastMove()
 
+    def select(self, node):
+        while not node.isLeaf():
+            if not node.isExpanded():
+                return node.expand()
+            else:
+                node = node.bestChild()
+        return node
+
+
     # Simula la partida actual y devuelve el ganador o si es empate
-    def simulate(self,game):
+    def simulate(self, game, turn):
+        gameTurn = turn
         gameSimulate = copy.deepcopy(game)
-        turn = self.turn
         black = RandomAgent(2)
         white = RandomAgent(1)
-        while True:
-            moves = gameSimulate.getMoves(turn)
-            if moves != []:
-                (x, y) = (-1, -1)
-                if turn == 2:
-                    (x, y) = black.getAction(gameSimulate)
-                else:
-                    (x, y) = white.getAction(gameSimulate)
-                gameSimulate.doMove(turn, x, y)
-            if turn == 1:
-                turn = 2
+        while not gameSimulate.isEnd():
+            if gameTurn == 2:
+                (x, y) = black.getAction(gameSimulate)
             else:
-                turn = 1
-            if gameSimulate.isEnd():
-                break;
-        result = gameSimulate.getWinner
+                (x, y) = white.getAction(gameSimulate)
+            if x != None:
+                gameSimulate.doMove(gameTurn, x, y)
+            gameTurn = self.changeTurn(gameTurn)
+
+        result = gameSimulate.getWinner()
         if result == 1 and self.color == 1:
             return 1
         elif result == 2 and self.color == 2:
@@ -327,4 +373,15 @@ class MonteCarloAgent():
         else:
             return -1
 
+    def getNodesandDepth(self):
+        return (self.nodes, self.iterations)
+
+    def getTimeandMoves(self):
+        return (self.timeMove/self.moves, self.moves)
+
+    def changeTurn(self,color):
+        if color == 1:
+            return 2
+        else:
+            return 1
 
