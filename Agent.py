@@ -50,7 +50,7 @@ class RulesAgent():
         return False
 
 
-class RulesAledoAgent():
+class RulesPriorityAgent():
 
     def __init__(self,color):
         self.color = color
@@ -291,7 +291,7 @@ class UnionRulesAgent():
                         [0, 0, 3, 3, 3, 3, 0, 0],
                         [10, 0, 7, 7, 7, 7, 0, 10]]
         self.agentRules = RulesAgent(self.color)
-        self.agentAledoRules = RulesAledoAgent(self.color)
+        self.agentAledoRules = RulesPriorityAgent(self.color)
 
 
     def getAction(self,game):

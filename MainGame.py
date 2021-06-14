@@ -32,7 +32,7 @@ class Game():
         elif self.playerBlack == 3:
             self.agentBlack = ag.RulesAgent(2)
         elif self.playerBlack == 4:
-            self.agentBlack = ag.RulesAledoAgent(2)
+            self.agentBlack = ag.RulesPriorityAgent(2)
         elif self.playerBlack == 5:
             self.agentBlack = ag.UnionRulesAgent(2)
         elif self.playerBlack == 6:
@@ -45,11 +45,11 @@ class Game():
         if self.playerWhite == 2:
             self.agentWhite = ag.RandomAgent(1)
         elif self.playerWhite == 3:
-            self.agentWhite = ag.RulesAledoAgent(1)
+            self.agentWhite = ag.RulesPriorityAgent(1)
         elif self.playerWhite == 4:
-            self.agentWhite = ag.RulesAledoAgent(1)
+            self.agentWhite = ag.RulesPriorityAgent(1)
         elif self.playerWhite == 5:
-            self.agentWhite = ag.RulesAledoAgent(1)
+            self.agentWhite = ag.RulesPriorityAgent(1)
         elif self.playerWhite == 6:
             self.agentWhite = ag.AlphaBetaAgent(1, 4, self.evaluator2)
         elif self.playerWhite == 7:

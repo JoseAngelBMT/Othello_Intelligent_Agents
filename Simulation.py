@@ -102,11 +102,11 @@ def simulateRulesandRandom(number_simulations):
 
     # Rules vs RulesAledo
     ag1_3 = ag.RulesAgent(1)
-    ag2_3 = ag.RulesAledoAgent(2)
+    ag2_3 = ag.RulesPriorityAgent(2)
     sim = Simulation(ag1_3, ag2_3, number_simulations)
 
     # RulesAledo vs Rules
-    ag1_4 = ag.RulesAledoAgent(1)
+    ag1_4 = ag.RulesPriorityAgent(1)
     ag2_4 = ag.RulesAgent(2)
     sim = Simulation(ag1_4, ag2_4, number_simulations)
 
