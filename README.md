@@ -8,10 +8,9 @@ To test the graphical interface and compete against the intelligent agents, by e
 The file "Agent.py" contains the classes of all the implemented intelligent agents.
 
 The file "Genetic.py" allows the execution of the genetic algorithm.
-
 1. The results obtained for the memory realisation can be found in "AGCHC.txt". Resulting in the weight matrix, the evolution of the fitness and the execution time.
-The file "Simulation.py", allows the creation of games and saving the results in "othello.csv".
 
+The file "Simulation.py", allows the creation of games and saving the results in "othello.csv".
 1. "othello.csv" contains all the results obtained from the different studies of the project.
 
 _______________________________________________________________________________________________________________________________________________________________________
