@@ -118,13 +118,13 @@ class Menu():
 
         self.clock = pg.time.Clock()
         self.clock.tick(24)
-        self.menu = pgmenu.Menu(500, 500, 'Othello',
+        self.menu = pgmenu.Menu('Othello', 500, 500,
                                 theme=pgmenu.themes.THEME_GREEN)
 
-        self.menu.add_selector('Jugador Negras :', [['Persona', 1], ['Aleatorio', 2], ['Reglas', 3], ['ReglasAledo',4],['Union de Reglas', 5], ['AlfaBeta', 6], ['Minimax',7],['MCTS',8]], onchange=self.playerBlack)
-        self.menu.add_selector('Jugador Blancas :', [['Persona', 1], ['Aleatorio', 2],['Reglas', 3],['ReglasAledo',4], ['Union de Reglas', 5],['AlfaBeta', 6], ['Minimax',7],['MCTS',8]], onchange=self.playerWhite)
-        self.menu.add_button('Jugar', self.startGame)
-        self.menu.add_button('Salir', pgmenu.events.EXIT)
+        self.menu.add.selector('Jugador Negras :', [['Persona', 1], ['Aleatorio', 2], ['Reglas', 3], ['ReglasAledo',4],['Union de Reglas', 5], ['AlfaBeta', 6], ['Minimax',7],['MCTS',8]], onchange=self.playerBlack)
+        self.menu.add.selector('Jugador Blancas :', [['Persona', 1], ['Aleatorio', 2],['Reglas', 3],['ReglasAledo',4], ['Union de Reglas', 5],['AlfaBeta', 6], ['Minimax',7],['MCTS',8]], onchange=self.playerWhite)
+        self.menu.add.button('Jugar', self.startGame)
+        self.menu.add.button('Salir', pgmenu.events.EXIT)
         self.menu.mainloop(self.screen)
 
     def playerBlack(self,value, player):

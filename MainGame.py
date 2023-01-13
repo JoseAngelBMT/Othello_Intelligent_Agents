@@ -16,6 +16,9 @@ class Game():
         self.evaluator1 = ev.Evaluator(1)
         self.evaluator2 = ev.Evaluator(1)
 
+        self.agentBlack = None
+        self.agentWhite = None
+
         self.selectPlayers()
 
         self.board = Interface.Board()
