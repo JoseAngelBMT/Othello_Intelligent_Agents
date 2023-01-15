@@ -6,7 +6,7 @@ import time
 import Evaluator as ev
 
 
-class Game():
+class Game:
     def __init__(self):
 
         self.nmoves = 1
